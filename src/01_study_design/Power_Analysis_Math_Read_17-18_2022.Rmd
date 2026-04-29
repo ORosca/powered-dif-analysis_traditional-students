@@ -1,0 +1,391 @@
+---
+title: "Power Analysis for Math and Read Samples"
+author: "Oxana Rosca"
+date: "`r Sys.Date()`"
+output:
+  word_document:
+    toc: true
+    toc_depth: 6  
+    reference_docx: ""C:/Users/orosc/OneDrive/WordDocMarkdownTemplate.docx""
+  html_document:
+    toc: true
+    toc_depth: 6 
+    theme: readable
+---
+
+# Results
+For RQ1: sample is adequate for detecting moderate DIF based on odds ratios (e.g., OR = 1.5),
+It is underpowered to detect small effect sizes based on McFadden’s R² = 0.035.
+This threshold is relatively conservative for item-level DIF in educational testing.
+
+# Assessments
+
+## DAACS Mathematics
+DAACS Math Assessment was designed to measure students' math skills and knowledge, including algebra, geometry, and statistics.The assessment consists of 174 math items from a pool of items (k = 174). Each student completed either 18 items (k_admin_min = 18) or 24 items (k_admin_max = 24) during their first attempt. For the 2022–2023 data collection, we implemented an adaptive multistage testing design, with item difficulty levels assigned by state standards and expert evaluations. The assessment was administered online, and students were allowed to use a calculator and other resources. The assessment was untimed, but the time taken by each respondent was recorded.
+
+## DAACS Reading
+DAACS Reading Assessment was designed to measure respondents' reading skills. The assessment consists of 30 reading passages and 180 dichotomous items (6 items per passage). Each student answered to 18 items (k_admin = 18 items). For 2022-2023 data-collection via reading assessment, we used a non-adaptive multistage testing design. Three randomly selected passages were presented to each student. The assessment was untimed, but the time taken by each student was recorded.
+
+# Packages
+```{r}
+library(maditr)
+library(dplyr)
+library(pmsampsize)
+library(ggplot2)
+library(psych)
+```
+
+# Data
+The data were collected between May 2022 and May 2023 from 17- and 18-year-old students at two colleges: UMGC1 and UA2. 
+
+```{r}
+load("C:/Users/orosc/OneDrive/Math/Math_dataClean-umgc1ua2_7.RData")
+load("C:/Users/orosc/OneDrive/Read/read_dataClean-umgc1ua2_7.RData")
+```
+
+Select 17- and 18-year olds (Young students)
+```{r}
+math.items_AnSamp2Y <- 
+  math.items_AnSamp2[math.items_AnSamp2$Age %in% c(17, 18), ] # 562
+read.items_AnSamp2Y <- 
+  read.items_AnSamp2[read.items_AnSamp2$Age %in% c(17, 18), ] # 540
+```
+
+# Time taken for assessment
+
+## Read: total min = 282s, min for 100% score = 447s, min for 70% score = 309s
+
+282 second is the minimum taken time for Math assessment at UMGC1
+```{r}
+min(read.items_AnSamp2Y$readTime, na.rm = T)
+```
+
+447 seconds is the shortest time for a UMGC1 student to get a perfect score
+```{r}
+min(read.items_AnSamp2Y[read.items_AnSamp2Y$readTotal == 1.0,]$readTime, na.rm = T)
+```
+
+309 seconds is the shortest time for a UMGC1 student to get at least 70%-score
+```{r}
+min(read.items_AnSamp2Y[read.items_AnSamp2Y$readTotal >= .7,]$readTime, na.rm = T)
+```
+
+## Math: total min = 221s, min for 100% score = 708s, min for 70% score = 532s
+
+221 second is the minimum taken time for Math assessment at UMGC1
+```{r}
+min(math.items_AnSamp2Y$mathTime, na.rm = T)
+```
+
+708 seconds is the shortest time for a UMGC1 student to get a perfect score
+```{r}
+min(math.items_AnSamp2Y[math.items_AnSamp2Y$mathTotal == 1.0,]$mathTime, na.rm = T)
+```
+
+532 seconds is the shortest time for a UMGC1 student to get at least 70%-score
+```{r}
+min(math.items_AnSamp2Y[math.items_AnSamp2Y$mathTotal >= .7,]$mathTime, na.rm = T)
+```
+
+# Theta scores distribution
+
+## Math Theta scores from 159-Items 2PL Model are normally distributed
+Central tendency characteristics: M = 0.76, SD = 0.81
+
+```{r}
+# Calculate mean and standard deviation
+mean_valueThetas_159Y <- mean(math.items_AnSamp2Y$Theta_math159, na.rm = TRUE)
+sd_valueThetas_159Y <- sd(math.items_AnSamp2Y$Theta_math159, na.rm = TRUE)
+median_valueThetas_159Y <- median(math.items_AnSamp2Y$Theta_math159, na.rm = TRUE)
+mean_valueThetas_159Y # -0.001
+sd_valueThetas_159Y # 0.89
+median_valueThetas_159Y # 0.79
+```
+
+### Histogram
+```{r}
+#library(ggplot2)
+mathUnimodel2PL159_AnSamp2Y_theta_hist<-create_histogram(
+  data = math.items_AnSamp2Y,
+  variable = "Theta_math159",
+  mean_value = mean(math.items_AnSamp2Y$Theta_math159),
+  sd_value = sd(math.items_AnSamp2Y$Theta_math159),
+  title_prefix = "Distribution of Theta-Scores from 17- and 18-year-olds using 159 DAACS Math Items",
+  output_file = "mathUnimodel2PL159_AnSamp2Y_theta_histogram.pdf"
+)
+mathUnimodel2PL159_AnSamp2Y_theta_hist
+```
+
+## Read Theta scores from 173-Items 2PL Model are normally distributed
+Central tendency characteristics: M = 0.15, SD = 0.73
+
+```{r}
+# Calculate mean and standard deviation
+mean_valueThetas_173Y <- mean(read.items_AnSamp2Y$Theta_read173, na.rm = TRUE)
+sd_valueThetas_173Y <- sd(read.items_AnSamp2Y$Theta_read173, na.rm = TRUE)
+median_valueThetas_173Y <- median(read.items_AnSamp2Y$Theta_read173, na.rm = TRUE)
+mean_valueThetas_173Y # 0.15
+sd_valueThetas_173Y # 0.73
+median_valueThetas_173Y # 0.25
+```
+
+### Histogram
+```{r}
+#library(ggplot2)
+readBifactor2Pl173_AnSamp2Y_theta_hist<-create_histogram(
+  data = read.items_AnSamp2Y,
+  variable = "Theta_read173",
+  mean_value = mean(read.items_AnSamp2Y$Theta_read173),
+  sd_value = sd(read.items_AnSamp2Y$Theta_read173),
+  title_prefix = "Distribution of Theta-Scores from 17- and 18-year-olds using 173 DAACS read Items",
+  output_file = "readBifactor2Pl173_AnSamp2Y_theta_histogram.pdf"
+)
+readBifactor2Pl173_AnSamp2Y_theta_hist
+```
+
+# Less than 100 responses (students) per item
+## Read 44-72 responses per item
+```{r}
+library(psych)
+read.itemsONLY_AnSamp2Y.describe <- describe(read.items_AnSamp2Y[,26:205])
+read.itemsONLY_AnSamp2Y.describe
+```
+## Math 9 - 172 responses per item
+```{r}
+math.itemsONLY_AnSamp2Y.describe <- describe(math.items_AnSamp2Y[,26:199])
+math.itemsONLY_AnSamp2Y.describe
+```
+
+# RQ1: are there items with DIF for gender & SES groups of young students (17 & 18 y.o)?
+
+## 562 students aged 17 and 18 took DAACS math assessment at 
+UAlbany and UMGC from May 2022 to May 2023 
+```{r}
+table(math.items_AnSamp2$Age)
+```
+
+## 540 students aged 17 and 18 took DAACS reading assessment at 
+UAlbany and UMGC from May 2022 to May 2023 
+```{r}
+table(read.items_AnSamp2$Age)
+```
+
+## Proportion of the referal group in each personal variable
+
+Function Propensities_CatVar for a propensity/frequencies table 
+for a single variable.
+```{r}
+# Propensities_CatVar <- function(data, variable) {
+#   data %>%
+#     group_by(!!sym(variable)) %>% # Group by the variable
+#     dplyr::summarize(Count = n(), .groups = "drop") %>% # Use dplyr's summarize
+#     mutate(
+#       Percent = round(Count / sum(Count, na.rm = TRUE) * 100, 2) # Compute percentages
+#     ) %>%
+#     rename(!!variable := !!sym(variable)) # Rename the column to match the variable name
+# }
+
+#Adjusted  Propensities_CatVar function to include metadata 
+# Define the new function
+# Propensities_CatVar_withMeta <- function(data, variable) {
+#   # Validate that the input is a data frame
+#   if (!inherits(data, "data.frame")) {
+#     stop("Input `data` must be a data frame.")
+#   }
+#   # Perform the calculations
+#   result <- data %>%
+#     group_by(!!sym(variable)) %>% # Group by the variable
+#     dplyr::summarize(Count = n(), .groups = "drop") %>% # Use dplyr's summarize
+#     mutate(
+#       Percent = round(Count / sum(Count, na.rm = TRUE) * 100, 2) # Compute percentages
+#     ) %>%
+#     rename(!!variable := !!sym(variable)) # Rename the column to match the variable name
+  
+#  # Add metadata
+#   attr(result, "metadata") <- list(
+#     tibble_name = deparse(substitute(data)), # Name of the input data frame
+#     variable_names = variable, # The variable used in the analysis
+#     n_obs = nrow(data) # Total number of observations in the data frame
+#   )
+#     return(result)
+# }
+
+```
+
+### Gender
+#### Math 38.6% Male / 61.4% Female
+```{r}
+# library(maditr)
+# library(dplyr)
+
+math_Gender_AnSamp2_17and18yo_tb <- Propensities_CatVar_withMeta(
+  math.items_AnSamp2[math.items_AnSamp2$Age %in% c(17, 18), ],
+  "gender"
+)
+math_Gender_AnSamp2_17and18yo_tb
+```
+
+#### Read 37.2% Male / 62.8% Female
+```{r}
+read_Gender_AnSamp2_17and18yo_tb <- Propensities_CatVar_withMeta(
+  read.items_AnSamp2[read.items_AnSamp2$Age %in% c(17, 18), ],
+  "gender"
+)
+read_Gender_AnSamp2_17and18yo_tb
+```
+
+### Less than 2% transfer students
+
+```{r}
+math_Transfer_AnSamp2_17and18yo_tb <- 
+  Propensities_CatVar_withMeta(math.items_AnSamp2[
+    math.items_AnSamp2$Age %in% c(17, 18), ], "transfer")
+math_Transfer_AnSamp2_17and18yo_tb
+```
+
+### Zero military affiliated students
+```{r}
+math_Military_AnSamp2_17and18yo_tb <- Propensities_CatVar_withMeta(math.items_AnSamp2[math.items_AnSamp2$Age %in% c(17, 18), ], "Military")
+math_Military_AnSamp2_17and18yo_tb
+```
+
+### Lower SES 
+#### Math 37.9% Lower SES / 62.1% Higher SES
+```{r}
+math_LowSES_AnSamp2_17and18yo_tb <- Propensities_CatVar_withMeta(math.items_AnSamp2[math.items_AnSamp2$Age %in% c(17, 18), ], "Pell")
+math_LowSES_AnSamp2_17and18yo_tb
+```
+
+#### Read 38.3% Lower SES / 61.7% Higher SES
+```{r}
+read_LowSES_AnSamp2_17and18yo_tb <- Propensities_CatVar_withMeta(
+  read.items_AnSamp2[read.items_AnSamp2$Age %in% c(17, 18), ],
+  "Pell"
+)
+read_LowSES_AnSamp2_17and18yo_tb
+```
+
+### Ethnicity: 
+#### Math: 5-category variable does not divide in two meaningfull groups 
+```{r}
+math_Ethnicity_AnSamp2_17and18yo_tb <- Propensities_CatVar_withMeta(math.items_AnSamp2[math.items_AnSamp2$Age %in% c(17, 18), ], "ethnicity")
+math_Ethnicity_AnSamp2_17and18yo_tb
+```
+
+#### Read: 55.2% White / 44.8% Non-white
+See the distribution across 5 categories
+```{r}
+read_Ethnicity_AnSamp2_17and18yo_tb <- Propensities_CatVar_withMeta(
+  read.items_AnSamp2[read.items_AnSamp2$Age %in% c(17, 18), ],
+  "ethnicity"
+)
+read_Ethnicity_AnSamp2_17and18yo_tb
+```
+
+Create a new dichotomous ethnicity variable called EthnicityD with two categories: 
+"White" and "Non-white"
+```{r}
+read.items_AnSamp2$EthnicityD <- ifelse(read.items_AnSamp2$ethnicity == "White", "White", "Non-white")
+read.items_AnSamp2<-read.items_AnSamp2[,c(1:8,206,9:205)]
+```
+
+```{r}
+read_EthnicityD_AnSamp2_17and18yo_tb <- Propensities_CatVar_withMeta(
+  read.items_AnSamp2[read.items_AnSamp2$Age %in% c(17, 18), ],
+  "EthnicityD"
+)
+read_EthnicityD_AnSamp2_17and18yo_tb
+```
+
+## Power Analyses: 
+
+### Math
+```{r}
+#library(pmsampsize)
+
+# Use McFadden's R² approximation and sample size
+pmsampsize(
+  type = "b",
+  parameters = 3,
+  prevalence = 0.5,
+  shrinkage = 0.9,
+  cstatistic = 0.72   # use a ballpark value based on literature
+)
+
+
+```
+We’re well above the recommended sample size (562 vs. 385), which suggests our data should be adequately powered to detect DIF at the effect size implied by c-statistic = 0.72.
+Our event count (e.g. correct responses) is assumed to be around half the sample—about 193 events—which supports three predictors: gender, SES, and math score.
+The high EPP (64.17) further implies excellent precision, assuming sufficient item exposure—so long as individual items have enough student responses for model stability.
+
+### Read
+```{r}
+# Use McFadden's R² approximation and sample size
+pmsampsize(
+  type = "b",
+  parameters = 4,
+  prevalence = 0.5,
+  shrinkage = 0.9,
+  cstatistic = 0.72   # use a ballpark value based on literature
+)
+
+
+```
+
+The R analyses are technically incorrect for logistic regression DIF.
+For a valid DIF power estimate, we should rely on the Python result, which shows 
+that:
+McFadden’s R² = 0.035 is underpowered (≈ 0.05) at N = 540–562
+Odds Ratio = 1.5 is well powered (≥ 0.80) at N = 540–562
+
+## Power Calculation for Odds Ratio = 1.5
+```{r}
+#library(pwr)
+
+# Define parameters
+alpha <- 0.05
+power_target <- 0.80
+odds_ratio <- 1.5
+
+# Convert odds ratio to Cohen's h using log-odds approximation
+log_odds <- log(odds_ratio)
+p1 <- exp(log_odds) / (1 + exp(log_odds))  # success probability for focal group
+p2 <- 0.5  # assuming reference group probability of 0.5
+
+# Cohen's h for proportions
+cohen_h <- 2 * asin(sqrt(p1)) - 2 * asin(sqrt(p2))
+
+# Power curve for two-proportion z-test (approximate)
+sample_sizes <- seq(100, 1000, by = 10)
+powers <- sapply(sample_sizes, function(n) {
+  pwr.2p.test(h = cohen_h, n = n / 2, sig.level = alpha, alternative = "two.sided")$power
+})
+
+# Plot
+plot(sample_sizes, powers, type = "l", lwd = 2,
+     xlab = "Total Sample Size", ylab = "Power",
+     main = "Power Curve for DIF Detection (Odds Ratio = 1.5)")
+abline(h = 0.80, col = "red", lty = 2)
+abline(v = 540, col = "gray", lty = 3)  # Reading
+abline(v = 562, col = "blue", lty = 3)  # Math
+legend("bottomright", legend = c("Target Power = 0.80", "N = 540", "N = 562"),
+       col = c("red", "gray", "blue"), lty = c(2, 3, 3))
+
+```
+
+## Power Calculation for McFadden’s R² = 0.035
+```{r}
+# Cohen's f² from McFadden R²
+r2 <- 0.035
+f2 <- r2 / (1 - r2)
+
+# Power for logistic-like model using F approximation
+pwr.f2.test(u = 1, v = 540 - 2, f2 = f2, sig.level = alpha)  # Reading
+pwr.f2.test(u = 1, v = 562 - 2, f2 = f2, sig.level = alpha)  # Math
+```
+
+
+
+
+
+
