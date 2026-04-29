@@ -14,7 +14,7 @@ The repository highlights the complete lifecycle of a targeted fairness study: f
 
 ## Repository Structure
 
-    daacs-dif-traditional-students/
+    powered-dif-analysis_traditional-students/
     ├── README.md
     ├── src/
     │   ├── 01_study_design/
